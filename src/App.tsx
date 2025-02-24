@@ -6,8 +6,10 @@ interface TodoItem {
   id: string;
   text: string;
   details?: {
+    id: string;
     text: string;
     isList: boolean;
+    completed: boolean;
   }[];
   completed: boolean;
   date: string;
@@ -18,6 +20,8 @@ function App() {
     const saved = localStorage.getItem('dark-mode');
     return saved ? JSON.parse(saved) : window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
+
+  const [showModal, setShowModal] = useState(false);
 
   const [todos, setTodos] = useState<TodoItem[]>(() => {
     const saved = localStorage.getItem('todo-app-state');
@@ -50,15 +54,17 @@ function App() {
     return () => document.removeEventListener('keydown', handleShortcut);
   }, []);
 
-  const processText = (text: string): { mainText: string; details: { text: string; isList: boolean }[] } => {
+  const processText = (text: string): { mainText: string; details: { id: string; text: string; isList: boolean; completed: boolean }[] } => {
     const lines = text.split('\n');
     const mainText = lines[0];
     const details = lines.slice(1)
       .map(line => line.trim())
       .filter(line => line.length > 0)
       .map(line => ({
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         text: line.startsWith('* ') ? line.substring(2) : line,
-        isList: line.startsWith('* ')
+        isList: line.startsWith('* '),
+        completed: false
       }));
     
     return { mainText, details };
@@ -101,6 +107,22 @@ function App() {
     });
   };
 
+  const toggleSubtask = (todoId: string, subtaskId: string) => {
+    setTodos((prevTodos: TodoItem[]) => {
+      return prevTodos.map((todo: TodoItem) => {
+        if (todo.id === todoId && todo.details) {
+          return {
+            ...todo,
+            details: todo.details.map(detail => 
+              detail.id === subtaskId ? { ...detail, completed: !detail.completed } : detail
+            )
+          };
+        }
+        return todo;
+      });
+    });
+  };
+
   const deleteTodo = (id: string) => {
     setTodos((prevTodos: TodoItem[]) => prevTodos.filter((todo: TodoItem) => todo.id !== id));
   };
@@ -116,13 +138,22 @@ function App() {
     <div className="todo-container">
       <div className="todo-header">
         <h1>Todo App</h1>
-        <button
-          onClick={() => setDarkMode(!darkMode)}
-          className="theme-toggle"
-          title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {darkMode ? '☀️' : '🌙'}
-        </button>
+        <div className="header-buttons">
+          <button
+            onClick={() => setShowModal(true)}
+            className="info-button"
+            title="Show app features"
+          >
+            ℹ️
+          </button>
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className="theme-toggle"
+            title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {darkMode ? '☀️' : '🌙'}
+          </button>
+        </div>
       </div>
 
       <div className="input-container">
@@ -156,7 +187,10 @@ function App() {
               <input
                 type="checkbox"
                 checked={todo.completed}
-                onChange={() => {}} // Remove direct checkbox onChange
+                onChange={(e) => {
+                  e.stopPropagation();
+                  toggleTodo(todo.id);
+                }}
                 className="todo-checkbox"
                 onClick={(e) => e.stopPropagation()} // Prevent double-toggle when clicking checkbox
               />
@@ -164,11 +198,37 @@ function App() {
                 <p className="todo-text">{todo.text}</p>
                 {todo.details && todo.details.length > 0 && (
                   <div className="todo-details">
-                    {todo.details.map((detail, index) => 
+                    {todo.details.map((detail) => 
                       detail.isList ? (
-                        <li key={index}>{detail.text}</li>
+                        <div 
+                          key={detail.id} 
+                          className="todo-subtask"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent parent todo from being toggled
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={detail.completed}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              toggleSubtask(todo.id, detail.id);
+                            }}
+                            className="todo-checkbox subtask-checkbox"
+                            onClick={(e) => e.stopPropagation()} // Prevent double-toggle
+                          />
+                          <span 
+                            className={`subtask-text ${detail.completed ? 'completed' : ''}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSubtask(todo.id, detail.id);
+                            }}
+                          >
+                            {detail.text}
+                          </span>
+                        </div>
                       ) : (
-                        <p key={index} className="todo-detail-text">{detail.text}</p>
+                        <p key={detail.id} className="todo-detail-text">{detail.text}</p>
                       )
                     )}
                   </div>
@@ -190,6 +250,56 @@ function App() {
         ))}
       </div>
 
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
+            <h2>Features Guide</h2>
+            
+            <section className="feature-section">
+              <h3>Creating Todos</h3>
+              <ul>
+                <li>Press <kbd>Cmd/Ctrl + K</kbd> anywhere to quickly focus the input</li>
+                <li>Press <kbd>Enter</kbd> to add a todo</li>
+                <li>Use <kbd>Shift + Enter</kbd> for new lines</li>
+              </ul>
+            </section>
+
+            <section className="feature-section">
+              <h3>Adding Lists to Todos</h3>
+              <p>Start a line with * to create a list item:</p>
+              <pre>
+{`Buy groceries
+* Milk
+* Bread
+* Eggs
+Remember to use coupons`}
+              </pre>
+            </section>
+
+            <section className="feature-section">
+              <h3>Managing Todos</h3>
+              <ul>
+                <li>Click anywhere on a todo card to mark it complete</li>
+                <li>Click individual checkboxes for main todo or subtasks</li>
+                <li>Click the trash icon to delete a todo</li>
+                <li>Completed todos are automatically moved to the bottom</li>
+              </ul>
+            </section>
+
+            <section className="feature-section">
+              <h3>Additional Features</h3>
+              <ul>
+                <li>Dark/Light mode toggle</li>
+                <li>All todos are saved automatically</li>
+                <li>Subtasks can be completed independently</li>
+                <li>Creation time is shown for each todo</li>
+              </ul>
+            </section>
+          </div>
+        </div>
+      )}
+      
       <button
         className="floating-button"
         onClick={() => document.getElementById('new-todo-input')?.focus()}
