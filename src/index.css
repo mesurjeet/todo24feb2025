@@ -347,12 +347,18 @@ body.dark {
   flex: 1;
 }
 
+.todo-content {
+  width: 100%;
+  text-align: left;
+}
+
 .todo-text {
   margin: 0;
   font-size: 1rem;
   font-weight: 500;
   color: var(--text-light);
   line-height: 1.4;
+  text-align: left;
 }
 
 .dark .todo-text {
@@ -363,6 +369,7 @@ body.dark {
   font-size: 0.75rem;
   color: var(--text-light-secondary);
   margin-top: 0.25rem;
+  text-align: left;
 }
 
 .dark .todo-date {
