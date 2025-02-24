@@ -441,6 +441,51 @@ body.dark {
   .todo-container {
     width: 100%;
     border-radius: 0;
+    margin: 0;
+    padding: 1rem;
+  }
+
+  .todo-header {
+    margin-bottom: 1.5rem;
+  }
+  #root{
+    padding: 0;
+  }
+  .todo-header h1 {
+    font-size: 2rem;
+  }
+
+  .input-container {
+    gap: 0.5rem;
+  }
+
+  .todo-input {
+    padding: 0.75rem 1rem;
+    min-height: 4rem;
+  }
+
+  .add-button {
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+  }
+
+  .add-button span:first-child {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+
+  .add-button span:last-child {
+    display: none;
+  }
+
+  .todo-item {
+    padding: 0.875rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 0.75rem;
+  }
+
+  body {
+    padding: 0;
   }
 }
 
