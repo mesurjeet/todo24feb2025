@@ -1,7 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { format, parseISO } from 'date-fns';
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 
 interface TodoItem {
@@ -26,8 +24,6 @@ function App() {
     return saved ? JSON.parse(saved) : [];
   });
   const [newTodo, setNewTodo] = useState('');
-  const [currentListItems, setCurrentListItems] = useState<string[]>([]);
-  const [newListItem, setNewListItem] = useState('');
 
   useEffect(() => {
     if (darkMode) {
@@ -113,13 +109,6 @@ function App() {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       addTodo();
-    }
-  };
-
-  const handleListItemKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && newListItem.trim()) {
-      setCurrentListItems(prev => [...prev, newListItem.trim()]);
-      setNewListItem('');
     }
   };
 
